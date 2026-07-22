@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
   <title>Attendance Web System — Dashboard UI</title>
   
-  <!-- Google Fonts: Plus Jakarta Sans, Outfit, Inter, JetBrains Mono -->
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -31,37 +31,15 @@
               600: '#2563eb',
               700: '#1d4ed8',
               900: '#1e3a8a',
-            },
-            dark: {
-              bg: '#090d16',
-              panel: '#111827',
-              card: '#1f2937',
-              border: '#374151',
             }
           },
           animation: {
             'scan-laser': 'laser 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            'pulse-glow': 'pulseGlow 2s infinite',
-            'float': 'float 4s ease-in-out infinite',
             'slide-in': 'slideIn 0.3s ease-out forwards',
           },
           keyframes: {
-            laser: {
-              '0%, 100%': { top: '0%' },
-              '50%': { top: '95%' },
-            },
-            pulseGlow: {
-              '0%, 100%': { boxShadow: '0 0 15px rgba(59, 130, 246, 0.4)' },
-              '50%': { boxShadow: '0 0 25px rgba(59, 130, 246, 0.8)' },
-            },
-            float: {
-              '0%, 100%': { transform: 'translateY(0px)' },
-              '50%': { transform: 'translateY(-6px)' },
-            },
-            slideIn: {
-              '0%': { opacity: '0', transform: 'translateY(-10px)' },
-              '100%': { opacity: '1', transform: 'translateY(0)' },
-            }
+            laser: { '0%, 100%': { top: '0%' }, '50%': { top: '95%' } },
+            slideIn: { '0%': { opacity: '0', transform: 'translateY(-10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }
           }
         }
       }
@@ -76,20 +54,15 @@
   <!-- EmailJS Library -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
-  <!-- Chart.js Library for Attendance Analytics Graphs -->
+  <!-- Chart.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <!-- Firebase Compatibility Libraries for Live Real-Time Multi-Device Sync -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
   <style>
-    /* Prevent zoom-in on page load */
-    html {
-      width: 100%;
-      max-width: 100vw;
-      overflow-x: hidden;
-      -webkit-text-size-adjust: 100%;
-      -ms-text-size-adjust: 100%;
-      text-size-adjust: 100%;
-    }
-    body {
+    html, body {
       width: 100%;
       max-width: 100vw;
       overflow-x: hidden;
@@ -99,66 +72,35 @@
       object-fit: cover !important;
       border-radius: 0.75rem;
     }
-    /* Custom Scrollbars */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: rgba(17, 24, 39, 0.8);
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #374151;
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #4b5563;
-    }
-    
-    /* Dashboard Glass Card Panels */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(17, 24, 39, 0.8); }
+    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
     .dashboard-panel {
       background: rgba(17, 24, 39, 0.85);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(55, 65, 81, 0.7);
     }
-    .dashboard-card {
-      background: rgba(31, 41, 55, 0.75);
-      border: 1px solid rgba(55, 65, 81, 0.6);
-    }
-
-    /* Print Styling */
     @media print {
-      body {
-        background: white !important;
-        color: black !important;
-      }
-      body * {
-        visibility: hidden;
-      }
-      #printable-report-area, #printable-report-area * {
-        visibility: visible;
-      }
-      #printable-report-area {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        color: black !important;
-        background: white !important;
-      }
-      .no-print {
-        display: none !important;
-      }
+      body { background: white !important; color: black !important; }
+      body * { visibility: hidden; }
+      #printable-report-area, #printable-report-area * { visibility: visible; }
+      #printable-report-area { position: absolute; left: 0; top: 0; width: 100%; background: white !important; }
     }
   </style>
 </head>
 <body class="bg-[#090d16] text-slate-100 font-sans min-h-screen flex relative selection:bg-blue-600 selection:text-white">
 
-  <!-- Toast Notification Container -->
+  <!-- Toast Notifications -->
   <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4"></div>
 
+  <!-- Live Sync Status Banner -->
+  <div id="sync-indicator" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 px-3.5 py-1 rounded-full text-[11px] font-bold bg-slate-900/90 border border-slate-700 text-slate-400 shadow-2xl flex items-center gap-2 backdrop-blur-md">
+    <span id="sync-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+    <span id="sync-text">Connecting Real-Time Sync...</span>
+  </div>
+
+  <!-- Navigation Sidebar -->
   <aside class="w-full h-14 md:w-20 md:h-full bg-[#0d1322] border-t md:border-t-0 md:border-r border-slate-800/80 flex flex-row md:flex-col items-center justify-around md:justify-start py-1 md:py-6 px-2 md:px-0 gap-1 md:gap-6 z-40 fixed bottom-0 md:top-0 left-0 right-0 md:right-auto">
     <a href="#" class="hidden md:flex w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 items-center justify-center text-white text-lg font-black shadow-lg shadow-blue-500/30">
       <i class="fa-solid fa-shapes"></i>
@@ -201,6 +143,7 @@
     </div>
   </aside>
 
+  <!-- Main View -->
   <main class="flex-1 ml-0 md:ml-20 pb-20 md:pb-8 p-3.5 sm:p-6 md:p-8 space-y-5 w-full max-w-full overflow-x-hidden" id="main-dashboard-top">
     
     <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3.5 pb-3 border-b border-slate-800/80 w-full overflow-x-hidden">
@@ -244,6 +187,7 @@
       </div>
     </header>
 
+    <!-- Top KPI Cards Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
       <div class="dashboard-panel p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between space-y-4">
         <div class="flex justify-between items-start">
@@ -312,6 +256,7 @@
       </button>
     </div>
 
+    <!-- Attendance Rate Progress Bar -->
     <div class="dashboard-panel p-4 rounded-xl">
       <div class="flex justify-between items-center text-xs font-semibold mb-2">
         <span class="text-slate-300 flex items-center gap-2">
@@ -324,6 +269,7 @@
       </div>
     </div>
 
+    <!-- Main Scanner & Live Table Sheet -->
     <div id="scanner-roster-section" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <div class="lg:col-span-4 space-y-6">
         <div class="dashboard-panel p-5 rounded-2xl shadow-xl relative overflow-hidden group">
@@ -494,6 +440,7 @@
       </div>
     </div>
 
+    <!-- Analytics Dashboard Section -->
     <section id="monitoring-dashboard-section" class="dashboard-panel p-6 md:p-8 rounded-3xl space-y-6 relative overflow-hidden">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-4">
         <div>
@@ -504,15 +451,9 @@
         </div>
 
         <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-bold text-slate-400">
-          <button id="period-weekly-btn" onclick="switchAnalyticsPeriod('weekly')" class="px-3.5 py-1.5 rounded-lg bg-blue-600 text-white font-extrabold shadow-md transition-all">
-            Daily / Weekly
-          </button>
-          <button id="period-monthly-btn" onclick="switchAnalyticsPeriod('monthly')" class="px-3.5 py-1.5 rounded-lg hover:text-white transition-all">
-            Monthly
-          </button>
-          <button id="period-yearly-btn" onclick="switchAnalyticsPeriod('yearly')" class="px-3.5 py-1.5 rounded-lg hover:text-white transition-all">
-            Yearly
-          </button>
+          <button id="period-weekly-btn" onclick="switchAnalyticsPeriod('weekly')" class="px-3.5 py-1.5 rounded-lg bg-blue-600 text-white font-extrabold shadow-md transition-all">Daily / Weekly</button>
+          <button id="period-monthly-btn" onclick="switchAnalyticsPeriod('monthly')" class="px-3.5 py-1.5 rounded-lg hover:text-white transition-all">Monthly</button>
+          <button id="period-yearly-btn" onclick="switchAnalyticsPeriod('yearly')" class="px-3.5 py-1.5 rounded-lg hover:text-white transition-all">Yearly</button>
         </div>
       </div>
 
@@ -557,9 +498,7 @@
             <h3 class="text-xs font-bold text-emerald-400 flex items-center gap-2">
               <i class="fa-solid fa-trophy"></i> Attendance Gain Students (Present)
             </h3>
-            <span class="text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-              Present Roster
-            </span>
+            <span class="text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full">Present Roster</span>
           </div>
 
           <div class="overflow-x-auto overflow-y-auto flex-1 border border-slate-800 rounded-xl bg-slate-900/40 w-full">
@@ -582,9 +521,7 @@
             <h3 class="text-xs font-bold text-rose-400 flex items-center gap-2">
               <i class="fa-solid fa-triangle-exclamation"></i> Attendance Loss Students (Unmarked)
             </h3>
-            <span class="text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2 py-0.5 rounded-full">
-              Pending Roster
-            </span>
+            <span class="text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2 py-0.5 rounded-full">Pending Roster</span>
           </div>
 
           <div class="overflow-x-auto overflow-y-auto flex-1 border border-slate-800 rounded-xl bg-slate-900/40 w-full">
@@ -601,20 +538,15 @@
             </table>
           </div>
         </div>
-
       </div>
-
     </section>
-
   </main>
 
   <!-- Modals -->
   <div id="login-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
     <div class="dashboard-panel rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative border border-blue-500/50 animate-slide-in">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <h3 class="text-base font-bold font-display text-white flex items-center gap-2">
-          <i class="fa-solid fa-lock text-blue-400"></i> Admin Login
-        </h3>
+        <h3 class="text-base font-bold font-display text-white flex items-center gap-2"><i class="fa-solid fa-lock text-blue-400"></i> Admin Login</h3>
         <button onclick="closeModal('login-modal')" class="text-slate-400 hover:text-white font-bold text-lg">&times;</button>
       </div>
 
@@ -623,7 +555,7 @@
           <label class="block text-xs font-bold text-slate-300 mb-1">Username / User ID</label>
           <div class="relative">
             <i class="fa-solid fa-user absolute left-3 top-3 text-xs text-slate-500"></i>
-            <input type="text" id="login-username" placeholder="Username" class="w-full bg-slate-900 text-white placeholder-slate-500 pl-9 pr-3 py-2 border border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 outline-none" required>
+            <input type="text" id="login-username" placeholder="Username" class="w-full bg-slate-900 text-white placeholder-slate-500 pl-9 pr-3 py-2 border border-slate-700 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500" required>
           </div>
         </div>
 
@@ -634,13 +566,13 @@
           </div>
           <div class="relative">
             <i class="fa-solid fa-key absolute left-3 top-3 text-xs text-slate-500"></i>
-            <input type="password" id="login-password" placeholder="Password" class="w-full bg-slate-900 text-white placeholder-slate-500 pl-9 pr-3 py-2 border border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 outline-none" required>
+            <input type="password" id="login-password" placeholder="Password" class="w-full bg-slate-900 text-white placeholder-slate-500 pl-9 pr-3 py-2 border border-slate-700 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500" required>
           </div>
         </div>
 
         <div id="login-error-msg" class="hidden text-xs text-rose-400 bg-rose-950/50 p-2.5 rounded-xl border border-rose-800 text-center font-medium"></div>
 
-        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs transition-colors shadow-lg shadow-blue-600/30 flex items-center justify-center gap-1.5">
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5 shadow-lg shadow-blue-600/30">
           <i class="fa-solid fa-right-to-bracket"></i> Login as Admin
         </button>
       </form>
@@ -650,9 +582,7 @@
   <div id="forgot-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
     <div class="dashboard-panel rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative border border-amber-500/50 animate-slide-in">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <h3 class="text-base font-bold font-display text-white flex items-center gap-2">
-          <i class="fa-solid fa-shield-halved text-amber-400"></i> 2-Step Password Verification
-        </h3>
+        <h3 class="text-base font-bold font-display text-white flex items-center gap-2"><i class="fa-solid fa-shield-halved text-amber-400"></i> 2-Step Password Verification</h3>
         <button onclick="closeModal('forgot-modal')" class="text-slate-400 hover:text-white font-bold text-lg">&times;</button>
       </div>
 
@@ -662,7 +592,7 @@
           <label class="block text-xs font-bold text-slate-300 mb-1">User ID or Recovery Email</label>
           <div class="relative">
             <i class="fa-solid fa-envelope absolute left-3 top-3 text-xs text-slate-500"></i>
-            <input type="text" id="recovery-user-id-input" value="yadukrishnan488@gmail.com" placeholder="Recovery Email or User ID" class="w-full bg-slate-900 text-amber-300 placeholder-slate-500 pl-9 pr-3 py-2 border border-slate-700 rounded-xl text-xs font-mono font-semibold focus:ring-2 focus:ring-amber-500 outline-none" required>
+            <input type="text" id="recovery-user-id-input" value="yadukrishnan488@gmail.com" placeholder="Recovery Email or User ID" class="w-full bg-slate-900 text-amber-300 placeholder-slate-500 pl-9 pr-3 py-2 border border-slate-700 rounded-xl text-xs font-mono font-semibold outline-none focus:ring-2 focus:ring-amber-500" required>
           </div>
         </div>
         <button id="send-code-btn" onclick="sendVerificationCode()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5">
@@ -682,15 +612,15 @@
         <form id="confirm-reset-form" class="space-y-3">
           <div>
             <label class="block text-xs font-bold text-slate-300 mb-1">6-Digit Confirmation Code *</label>
-            <input type="text" id="otp-code-input" placeholder="6-digit code" maxlength="6" class="w-full bg-slate-900 text-white placeholder-slate-500 px-3.5 py-2 border border-slate-700 rounded-xl text-xs font-mono tracking-widest text-center text-amber-400 font-bold focus:ring-2 focus:ring-amber-500 outline-none" required>
+            <input type="text" id="otp-code-input" placeholder="6-digit code" maxlength="6" class="w-full bg-slate-900 text-white placeholder-slate-500 px-3.5 py-2 border border-slate-700 rounded-xl text-xs font-mono tracking-widest text-center text-amber-400 font-bold outline-none focus:ring-2 focus:ring-amber-500" required>
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-300 mb-1">New Admin Password *</label>
-            <input type="password" id="new-pass-step2" placeholder="New Password" class="w-full bg-slate-900 text-white placeholder-slate-500 px-3.5 py-2 border border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 outline-none" required>
+            <input type="password" id="new-pass-step2" placeholder="New Password" class="w-full bg-slate-900 text-white placeholder-slate-500 px-3.5 py-2 border border-slate-700 rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-500" required>
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-300 mb-1">Confirm New Password *</label>
-            <input type="password" id="confirm-pass-step2" placeholder="Confirm Password" class="w-full bg-slate-900 text-white placeholder-slate-500 px-3.5 py-2 border border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 outline-none" required>
+            <input type="password" id="confirm-pass-step2" placeholder="Confirm Password" class="w-full bg-slate-900 text-white placeholder-slate-500 px-3.5 py-2 border border-slate-700 rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-500" required>
           </div>
 
           <div id="step2-error-msg" class="hidden text-xs text-rose-400 bg-rose-950/50 p-2 rounded-xl border border-rose-800 text-center font-medium"></div>
@@ -710,20 +640,18 @@
   <div id="header-edit-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
     <div class="dashboard-panel rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative border border-blue-500/50 animate-slide-in">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <h3 class="text-base font-bold font-display text-white flex items-center gap-2">
-          <i class="fa-solid fa-sliders text-blue-400"></i> Admin: Edit Title & Session
-        </h3>
+        <h3 class="text-base font-bold font-display text-white flex items-center gap-2"><i class="fa-solid fa-sliders text-blue-400"></i> Admin: Edit Title & Session</h3>
         <button onclick="closeModal('header-edit-modal')" class="text-slate-400 hover:text-white font-bold text-lg">&times;</button>
       </div>
 
       <form id="header-edit-form" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1">Heading Title</label>
-          <input type="text" id="edit-header-title" class="w-full bg-slate-900 text-white px-3.5 py-2 border border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 outline-none" required>
+          <input type="text" id="edit-header-title" class="w-full bg-slate-900 text-white px-3.5 py-2 border border-slate-700 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500" required>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1">Session Section</label>
-          <select id="edit-header-session" class="w-full bg-slate-900 text-white px-3.5 py-2 border border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+          <select id="edit-header-session" class="w-full bg-slate-900 text-white px-3.5 py-2 border border-slate-700 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
             <option value="Morning Session">Morning Session</option>
             <option value="Afternoon Session">Afternoon Session</option>
             <option value="Evening Session">Evening Session</option>
@@ -731,7 +659,7 @@
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1">Date</label>
-          <input type="text" id="edit-header-date" class="w-full bg-slate-900 text-white px-3.5 py-2 border border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 outline-none" required>
+          <input type="text" id="edit-header-date" class="w-full bg-slate-900 text-white px-3.5 py-2 border border-slate-700 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500" required>
         </div>
 
         <div class="flex gap-2 pt-2">
@@ -745,9 +673,7 @@
   <div id="edit-student-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
     <div class="dashboard-panel rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative border border-indigo-500/50 animate-slide-in">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <h3 class="text-base font-bold font-display text-white flex items-center gap-2">
-          <i class="fa-solid fa-user-pen text-indigo-400"></i> Admin: Edit Student Details
-        </h3>
+        <h3 class="text-base font-bold font-display text-white flex items-center gap-2"><i class="fa-solid fa-user-pen text-indigo-400"></i> Admin: Edit Student Details</h3>
         <button onclick="closeModal('edit-student-modal')" class="text-slate-400 hover:text-white font-bold text-lg">&times;</button>
       </div>
 
@@ -755,11 +681,11 @@
         <input type="hidden" id="edit-student-slno">
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1">Student Full Name</label>
-          <input type="text" id="edit-student-name-input" class="w-full bg-slate-900 text-white px-3.5 py-2 border border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none" required>
+          <input type="text" id="edit-student-name-input" class="w-full bg-slate-900 text-white px-3.5 py-2 border border-slate-700 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500" required>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1">Barcode ID</label>
-          <input type="text" id="edit-student-barcode-input" class="w-full bg-slate-900 text-white px-3.5 py-2 border border-slate-700 rounded-xl text-xs font-mono uppercase focus:ring-2 focus:ring-indigo-500 outline-none" required>
+          <input type="text" id="edit-student-barcode-input" class="w-full bg-slate-900 text-white px-3.5 py-2 border border-slate-700 rounded-xl text-xs font-mono uppercase outline-none focus:ring-2 focus:ring-indigo-500" required>
         </div>
 
         <div class="flex gap-2 pt-2">
@@ -773,9 +699,7 @@
   <div id="pdf-reports-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
     <div class="dashboard-panel rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative border border-rose-500/50 animate-slide-in">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <h3 class="text-base font-bold font-display text-white flex items-center gap-2">
-          <i class="fa-solid fa-file-pdf text-rose-400"></i> Generate Printable PDF Report
-        </h3>
+        <h3 class="text-base font-bold font-display text-white flex items-center gap-2"><i class="fa-solid fa-file-pdf text-rose-400"></i> Generate Printable PDF Report</h3>
         <button onclick="closeModal('pdf-reports-modal')" class="text-slate-400 hover:text-white font-bold text-lg">&times;</button>
       </div>
 
@@ -803,9 +727,7 @@
   <div id="total-list-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
     <div class="dashboard-panel rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl relative max-h-[85vh] flex flex-col animate-slide-in">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <h3 class="text-base font-bold font-display text-white flex items-center gap-2">
-          <i class="fa-solid fa-users text-blue-400"></i> Complete Roster (Total Students)
-        </h3>
+        <h3 class="text-base font-bold font-display text-white flex items-center gap-2"><i class="fa-solid fa-users text-blue-400"></i> Complete Roster (Total Students)</h3>
         <button onclick="closeModal('total-list-modal')" class="text-slate-400 hover:text-white font-bold text-xl">&times;</button>
       </div>
       <div class="overflow-y-auto flex-1 border border-slate-800 rounded-xl bg-slate-950/40">
@@ -833,9 +755,7 @@
   <div id="present-list-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
     <div class="dashboard-panel rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl relative max-h-[85vh] flex flex-col border border-emerald-900/80 animate-slide-in">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <h3 class="text-base font-bold font-display text-emerald-400 flex items-center gap-2">
-          <i class="fa-solid fa-circle-check"></i> Present Students Log
-        </h3>
+        <h3 class="text-base font-bold font-display text-emerald-400 flex items-center gap-2"><i class="fa-solid fa-circle-check"></i> Present Students Log</h3>
         <button onclick="closeModal('present-list-modal')" class="text-slate-400 hover:text-white font-bold text-xl">&times;</button>
       </div>
       <div class="overflow-y-auto flex-1 border border-slate-800 rounded-xl bg-slate-950/40">
@@ -863,9 +783,7 @@
   <div id="absent-list-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
     <div class="dashboard-panel rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl relative max-h-[85vh] flex flex-col border border-rose-900/80 animate-slide-in">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <h3 class="text-base font-bold font-display text-rose-400 flex items-center gap-2">
-          <i class="fa-solid fa-circle-xmark"></i> Absent Students Log
-        </h3>
+        <h3 class="text-base font-bold font-display text-rose-400 flex items-center gap-2"><i class="fa-solid fa-circle-xmark"></i> Absent Students Log</h3>
         <button onclick="closeModal('absent-list-modal')" class="text-slate-400 hover:text-white font-bold text-xl">&times;</button>
       </div>
       <div class="overflow-y-auto flex-1 border border-slate-800 rounded-xl bg-slate-950/40">
@@ -892,9 +810,7 @@
   <div id="scan-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
     <div class="dashboard-panel rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative border border-slate-700 animate-slide-in">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <h3 class="text-sm font-bold font-display text-white flex items-center gap-2" id="modal-student-name">
-          <i class="fa-solid fa-qrcode text-blue-400"></i> Scan Barcode For Student
-        </h3>
+        <h3 class="text-sm font-bold font-display text-white flex items-center gap-2" id="modal-student-name"><i class="fa-solid fa-qrcode text-blue-400"></i> Scan Barcode For Student</h3>
         <button onclick="closeRegisterModal()" class="text-slate-400 hover:text-white font-bold text-lg">&times;</button>
       </div>
       <div id="modal-reader" class="overflow-hidden rounded-xl border-2 border-blue-500 bg-slate-950 min-h-[220px]"></div>
@@ -913,9 +829,7 @@
   <div id="id-card-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
     <div class="dashboard-panel rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative border border-blue-500/50 animate-slide-in">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <h3 class="text-sm font-bold font-display text-white flex items-center gap-2">
-          <i class="fa-solid fa-id-card text-blue-400"></i> Student ID Badge
-        </h3>
+        <h3 class="text-sm font-bold font-display text-white flex items-center gap-2"><i class="fa-solid fa-id-card text-blue-400"></i> Student ID Badge</h3>
         <button onclick="closeModal('id-card-modal')" class="text-slate-400 hover:text-white font-bold text-lg">&times;</button>
       </div>
 
@@ -937,10 +851,47 @@
       </div>
 
       <div class="flex gap-2">
-        <button onclick="window.print()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5">
-          <i class="fa-solid fa-print"></i> Print ID Badge
-        </button>
+        <button onclick="window.print()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5"><i class="fa-solid fa-print"></i> Print ID Badge</button>
         <button onclick="closeModal('id-card-modal')" class="bg-slate-800 text-slate-300 px-4 py-2.5 rounded-xl font-bold text-xs">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="time-window-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 items-center justify-center p-4">
+    <div class="bg-[#0d1322] border border-slate-700 rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-5 animate-slide-in">
+      <div class="flex justify-between items-center">
+        <h3 class="text-base font-black font-display text-white flex items-center gap-2">
+          <i class="fa-solid fa-clock text-amber-400"></i> Attendance Time Window
+        </h3>
+        <button onclick="closeModal('time-window-modal')" class="text-slate-400 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400">When enabled, students can only submit attendance during the specified time range. Outside this window, all barcode scans and manual entries are blocked.</p>
+
+      <label class="flex items-center gap-3 cursor-pointer bg-slate-900/60 border border-slate-700 rounded-xl p-3">
+        <input type="checkbox" id="tw-enabled" onchange="toggleTWFields()" class="w-4 h-4 accent-amber-500">
+        <span class="text-sm font-bold text-white">Enable Time Window Restriction</span>
+      </label>
+
+      <div id="tw-fields" class="space-y-3 transition-all">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-400 mb-1"><i class="fa-solid fa-play text-emerald-400 mr-1"></i>Start Time</label>
+            <input type="time" id="tw-start" class="w-full bg-slate-900 text-white border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono outline-none focus:ring-2 focus:ring-amber-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-400 mb-1"><i class="fa-solid fa-stop text-rose-400 mr-1"></i>End Time</label>
+            <input type="time" id="tw-end" class="w-full bg-slate-900 text-white border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono outline-none focus:ring-2 focus:ring-amber-500">
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-500">Example: Start 08:30, End 09:30 allows attendance for 1 hour only.</p>
+      </div>
+
+      <div class="flex gap-3 pt-1">
+        <button onclick="closeModal('time-window-modal')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-bold py-2.5 rounded-xl border border-slate-700 transition-all">Cancel</button>
+        <button onclick="saveTimeWindow()" class="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-sm font-bold py-2.5 rounded-xl shadow-lg shadow-amber-600/30 transition-all">Save Window</button>
       </div>
     </div>
   </div>
@@ -973,17 +924,40 @@
     </table>
   </div>
 
-  <!-- Application JavaScript Logic -->
+  <!-- Application Logic with FIREBASE INTEGRATION -->
   <script>
-    // Initialize EmailJS Credentials
+    // =========================================================================
+    // FIREBASE REAL-TIME DATABASE CONFIGURATION
+    // =========================================================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyC05Nk-pWIz73eKCs4K4ZiR4kQlxUjrDig",
+      authDomain: "attendance-marker-d8174.firebaseapp.com",
+      databaseURL: "https://attendance-marker-d8174-default-rtdb.firebaseio.com",
+      projectId: "attendance-marker-d8174",
+      storageBucket: "attendance-marker-d8174.firebasestorage.app",
+      messagingSenderId: "1023523466761",
+      appId: "1:1023523466761:web:c4ac752af1fcac003992d8",
+      measurementId: "G-PKB43310HV"
+    };
+
+    let dbRef = null;
+    let firebaseConnected = false;
+
+    try {
+      firebase.initializeApp(firebaseConfig);
+      dbRef = firebase.database().ref('attendance_app');
+      firebaseConnected = true;
+    } catch(e) {
+      console.warn("Firebase Init Error:", e);
+    }
+
+    // EmailJS Credentials
     const EMAILJS_PUBLIC_KEY = "YwDH43t2CA3Ws9jKu";
     const EMAILJS_SERVICE_ID = "service_749387q";
     const EMAILJS_TEMPLATE_ID = "template_ywoflns";
 
     (function() {
-      try {
-        emailjs.init(EMAILJS_PUBLIC_KEY);
-      } catch(e) {}
+      try { emailjs.init(EMAILJS_PUBLIC_KEY); } catch(e) {}
     })();
 
     // Live Clock Engine
@@ -1018,7 +992,7 @@
       "Lomia alexander", "MJ DANIEL", "Madhav S", "MAHADEVAN.S.", "Mahima Ramesh", "Martin Mathew", "Maryam K. A",
       "MEHANA K B", "Merlin Devasia", "Mohamed Afthab K.K", "Mohammad Faizan", "MOHAMMED NAHID R M", "Mohammed Nihal",
       "MUFEEDA PU", "Muhammad Farhan", "Muhammad Hayyan", "Muhammad Shahid P", "Muhammed Afnan N", "Muhammed Ansal",
-      "MUHAMMED FARIS", "MUHAMMED HADI", "MUHAMMED HASHIF A C", "MUHAMMED LAHAN", "Muhammed Sinan P", "Muhammed Yanish",
+      "MUFEEDA PU", "MUHAMMED FARIS", "MUHAMMED HADI", "MUHAMMED HASHIF A C", "MUHAMMED LAHAN", "Muhammed Sinan P", "Muhammed Yanish",
       "N S SASNITHA", "NAJIYA NAZRIN M S", "Navaneeth S", "Naveen krshna", "Navneeth Illiparambil Ranjithkumar",
       "Nazreen Nazar", "NEERAJ NITHA RAVEENDRAN NAIR", "Nethra elna raju", "NIJA R", "Pavana Premraj",
       "RAJALEKSHMI P SANTHOSH", "RISHIKESH.V.", "Rishon Thomas", "Rithu Krishna KP", "Riya Rishin V T", "Riza fathima AP",
@@ -1031,19 +1005,14 @@
     ];
 
     const explicitBarcodes = {
-      170: "26JSOFT339", 
-      180: "26JSOFT087", 
-      76:  "26JSOFT031", 
-      54:  "26JSOFT019", 
-      136: "26JSOF066",  
-      61:  "26JSOFT151"  
+      170: "26JSOFT339", 180: "26JSOFT087", 76: "26JSOFT031", 
+      54: "26JSOFT019", 136: "26JSOF066", 61: "26JSOFT151"  
     };
 
     let students = [];
     let currentFilter = 'all';
     let lastScannedCode = null;
     let lastScanTime = 0;
-
     let currentAnalyticsPeriod = 'weekly'; 
     let analyticsChartInstance = null;
 
@@ -1066,7 +1035,6 @@
       if (sessionState === 'true') {
         isAdminLoggedIn = true;
       }
-
       updateAdminAuthUI();
     }
 
@@ -1076,8 +1044,8 @@
         widget.innerHTML = `
           <div class="flex items-center gap-2 bg-emerald-950/80 border border-emerald-500/70 text-emerald-300 px-3.5 py-2 rounded-xl text-xs font-extrabold shadow-md">
             <i class="fa-solid fa-user-shield text-emerald-400 text-sm"></i>
-            <span>Admin Active (Override ON)</span>
-            <button onclick="logoutAdmin()" title="Logout Admin" class="ml-1.5 bg-rose-950 hover:bg-rose-900 text-rose-300 px-2 py-0.5 rounded-md text-[10px] font-bold border border-rose-800">
+            <span>Admin Active</span>
+            <button onclick="logoutAdmin()" class="ml-1.5 bg-rose-950 hover:bg-rose-900 text-rose-300 px-2 py-0.5 rounded-md text-[10px] font-bold border border-rose-800">
               Logout
             </button>
           </div>
@@ -1095,10 +1063,8 @@
       document.getElementById('login-username').value = "";
       document.getElementById('login-password').value = "";
       document.getElementById('login-error-msg').classList.add('hidden');
-      
-      const modal = document.getElementById('login-modal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
+      document.getElementById('login-modal').classList.remove('hidden');
+      document.getElementById('login-modal').classList.add('flex');
     }
 
     function logoutAdmin() {
@@ -1128,108 +1094,11 @@
         sessionStorage.setItem('design_lab_admin_session', 'true');
         updateAdminAuthUI();
         closeModal('login-modal');
-        showToast("🔓 Welcome Admin! Location and time window checks bypassed.", "success");
+        showToast("🔓 Welcome Admin! Direct attendance override active.", "success");
       } else {
         errorMsg.textContent = "Invalid username or password!";
         errorMsg.classList.remove('hidden');
       }
-    });
-
-    function openForgotPasswordModal() {
-      closeModal('login-modal');
-      resetRecoveryStep();
-
-      const modal = document.getElementById('forgot-modal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-    }
-
-    function resetRecoveryStep() {
-      document.getElementById('recovery-step-1').classList.remove('hidden');
-      document.getElementById('recovery-step-2').classList.add('hidden');
-      document.getElementById('recovery-user-id-input').value = adminCredentials.recoveryEmail;
-      document.getElementById('otp-code-input').value = "";
-      document.getElementById('new-pass-step2').value = "";
-      document.getElementById('confirm-pass-step2').value = "";
-      document.getElementById('step2-error-msg').classList.add('hidden');
-    }
-
-    function sendVerificationCode() {
-      const inputVal = document.getElementById('recovery-user-id-input').value.trim();
-      const targetEmail = inputVal.includes('@') ? inputVal : adminCredentials.recoveryEmail;
-
-      if (targetEmail) {
-        currentGeneratedOTP = String(Math.floor(100000 + Math.random() * 900000));
-        document.getElementById('recovery-step-1').classList.add('hidden');
-        document.getElementById('recovery-step-2').classList.remove('hidden');
-        document.getElementById('dispatched-email-badge').textContent = targetEmail;
-        dispatchOtpEmail(targetEmail, currentGeneratedOTP);
-        showToast(`📩 Sending Code via EmailJS to ${targetEmail}`, 'info');
-      } else {
-        showToast(`❌ Enter a valid recovery email address`, 'error');
-      }
-    }
-
-    function dispatchOtpEmail(toEmail, otpCode) {
-      const templateParams = {
-        to_email: toEmail,
-        recipient_email: toEmail,
-        user_email: toEmail,
-        email: toEmail,
-        otp_code: otpCode,
-        verification_code: otpCode,
-        code: otpCode,
-        message: `Your Design Lab Admin 6-Digit Password Reset Verification Code is: ${otpCode}`,
-        subject: `🔐 Design Lab Password Reset Verification Code: ${otpCode}`
-      };
-
-      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_PUBLIC_KEY)
-        .then(function(res) {
-          showToast(`📧 Verification Code sent via EmailJS to ${toEmail}! Check your inbox.`, 'success');
-        }, function(err) {
-          fetch("https://api.web3forms.com/submit", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Accept": "application/json" },
-            body: JSON.stringify({
-              access_key: "740b15da-d667-42c2-b529-6edfbab3428d",
-              subject: "🔐 Design Lab Password Reset Verification Code: " + otpCode,
-              email: toEmail,
-              from_name: "Design Lab System",
-              message: `Your 6-Digit Password Reset Code is: ${otpCode}`
-            })
-          }).then(() => {
-            showToast(`📧 Verification Code sent to ${toEmail}! Check your inbox.`, 'success');
-          }).catch(e => {});
-        });
-    }
-
-    document.getElementById('confirm-reset-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const enteredOTP = document.getElementById('otp-code-input').value.trim();
-      const newPass = document.getElementById('new-pass-step2').value.trim();
-      const confirmPass = document.getElementById('confirm-pass-step2').value.trim();
-      const errorMsg = document.getElementById('step2-error-msg');
-
-      if (enteredOTP !== currentGeneratedOTP) {
-        errorMsg.textContent = "❌ Invalid 6-digit confirmation code!";
-        errorMsg.classList.remove('hidden');
-        return;
-      }
-
-      if (newPass !== confirmPass) {
-        errorMsg.textContent = "❌ Passwords do not match!";
-        errorMsg.classList.remove('hidden');
-        return;
-      }
-
-      adminCredentials.password = newPass;
-      localStorage.setItem('design_lab_admin_credentials', JSON.stringify(adminCredentials));
-
-      closeModal('forgot-modal');
-      currentGeneratedOTP = null;
-
-      showToast("🎉 Password changed successfully! You can now login.", "success");
-      openLoginModal();
     });
 
     let headerSettings = {
@@ -1269,24 +1138,60 @@
       }, 3500);
     }
 
+    // =========================================================================
+    // REAL-TIME CLOUD SYNCHRONIZATION ENGINE
+    // =========================================================================
     function initDatabase() {
       initAdminAuth();
 
-      const savedHeader = localStorage.getItem('design_lab_header_settings');
-      if (savedHeader) {
-        try { headerSettings = JSON.parse(savedHeader); } catch(e) {}
-      }
-      updateHeaderDOM();
+      if (firebaseConnected && dbRef) {
+        dbRef.on('value', (snapshot) => {
+          const val = snapshot.val();
+          if (val) {
+            if (val.students) students = val.students;
+            if (val.headerSettings) headerSettings = val.headerSettings;
+            updateHeaderDOM();
+            renderTable();
+            
+            document.getElementById('sync-dot').className = "w-2 h-2 rounded-full bg-emerald-400";
+            document.getElementById('sync-text').textContent = "Live Cloud Sync Active: attendance-marker-d8174";
+          } else {
+            loadDefaultStudents();
+            syncDataToCloud();
+          }
+        }, (error) => {
+          document.getElementById('sync-dot').className = "w-2 h-2 rounded-full bg-rose-400";
+          document.getElementById('sync-text').textContent = "Sync Warning: Check Rules in Firebase Console";
+        });
+      } else {
+        document.getElementById('sync-dot').className = "w-2 h-2 rounded-full bg-amber-400";
+        document.getElementById('sync-text').textContent = "Local Storage Mode";
 
-      const savedData = localStorage.getItem('design_lab_attendance_db');
-      if (savedData) {
-        try {
-          students = JSON.parse(savedData);
-        } catch(e) {
+        const savedHeader = localStorage.getItem('design_lab_header_settings');
+        if (savedHeader) {
+          try { headerSettings = JSON.parse(savedHeader); } catch(e) {}
+        }
+        updateHeaderDOM();
+
+        const savedData = localStorage.getItem('design_lab_attendance_db');
+        if (savedData) {
+          try { students = JSON.parse(savedData); } catch(e) { loadDefaultStudents(); }
+        } else {
           loadDefaultStudents();
         }
-      } else {
-        loadDefaultStudents();
+      }
+    }
+
+    function syncDataToCloud() {
+      localStorage.setItem('design_lab_attendance_db', JSON.stringify(students));
+      localStorage.setItem('design_lab_header_settings', JSON.stringify(headerSettings));
+
+      if (firebaseConnected && dbRef) {
+        dbRef.set({
+          students: students,
+          headerSettings: headerSettings,
+          lastUpdated: Date.now()
+        });
       }
     }
 
@@ -1301,9 +1206,8 @@
       document.getElementById('edit-header-session').value = headerSettings.session;
       document.getElementById('edit-header-date').value = headerSettings.date;
       
-      const modal = document.getElementById('header-edit-modal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
+      document.getElementById('header-edit-modal').classList.remove('hidden');
+      document.getElementById('header-edit-modal').classList.add('flex');
     }
 
     document.getElementById('header-edit-form').addEventListener('submit', (e) => {
@@ -1312,10 +1216,10 @@
       headerSettings.session = document.getElementById('edit-header-session').value;
       headerSettings.date = document.getElementById('edit-header-date').value.trim();
 
-      localStorage.setItem('design_lab_header_settings', JSON.stringify(headerSettings));
+      syncDataToCloud();
       updateHeaderDOM();
       closeModal('header-edit-modal');
-      showToast("Updated Header Settings & Session!", "success");
+      showToast("Updated Header Settings & Session live across all devices!", "success");
     });
 
     function loadDefaultStudents() {
@@ -1324,20 +1228,15 @@
         const barcode = explicitBarcodes[slNo] || `26JSOFT${String(slNo).padStart(3, '0')}`;
         return { slNo, barcode, name, present: false, time: '-' };
       });
-      saveToLocalStorage();
-    }
-
-    function saveToLocalStorage() {
-      localStorage.setItem('design_lab_attendance_db', JSON.stringify(students));
+      syncDataToCloud();
     }
 
     function resetData() {
-      if (confirm("Are you sure you want to reset all attendance records and barcodes to default?")) {
-        localStorage.removeItem('design_lab_attendance_db');
+      if (confirm("Are you sure you want to reset all attendance records and barcodes to default live for everyone?")) {
         loadDefaultStudents();
         renderTable();
         renderAnalyticsDashboard();
-        showToast("Database reset to default 180 student roster.", "warning");
+        showToast("Database reset to default 180 student roster across all devices.", "warning");
       }
     }
 
@@ -1350,13 +1249,12 @@
     let isMainCameraRunning = false;
 
     // ── Geolocation & Time-Window State ──────────────────────────────────────
-    const CAMPUS_LAT  = 10.007491;   // Latitude
-    const CAMPUS_LNG  = 76.365410;   // Longitude
+    const CAMPUS_LAT  = 10.007491;   
+    const CAMPUS_LNG  = 76.365410;   
     const CAMPUS_NAME = 'Campus (10.007491, 76.365410)';
-    const GEO_RADIUS_M = 300;        // 300-metre campus radius
+    const GEO_RADIUS_M = 300;        
 
     let geoState = 'idle';         
-    let geoWatchId = null;
     let lastGeoResult = null;      
 
     let attendanceWindow = JSON.parse(localStorage.getItem('design_lab_time_window') || 'null') || {
@@ -1364,10 +1262,6 @@
       startTime: '08:00',
       endTime:   '10:00'
     };
-
-    function saveWindow() {
-      localStorage.setItem('design_lab_time_window', JSON.stringify(attendanceWindow));
-    }
 
     function setFilter(filter) {
       currentFilter = filter;
@@ -1490,800 +1384,19 @@
       renderAnalyticsDashboard();
     }
 
-    const searchTop = document.getElementById('search-input');
-    const searchRoster = document.getElementById('roster-search-input');
-
-    if (searchTop && searchRoster) {
-      searchTop.addEventListener('input', (e) => {
-        const val = e.target.value;
-        searchRoster.value = val;
-        renderTable(val);
-      });
-
-      searchRoster.addEventListener('input', (e) => {
-        const val = e.target.value;
-        searchTop.value = val;
-        renderTable(val);
-      });
-    }
-
-    function switchAnalyticsPeriod(period) {
-      currentAnalyticsPeriod = period;
-      
-      const weeklyBtn = document.getElementById('period-weekly-btn');
-      const monthlyBtn = document.getElementById('period-monthly-btn');
-      const yearlyBtn = document.getElementById('period-yearly-btn');
-
-      [weeklyBtn, monthlyBtn, yearlyBtn].forEach(btn => {
-        btn.className = "px-3.5 py-1.5 rounded-lg hover:text-white transition-all";
-      });
-
-      if (period === 'weekly') {
-        weeklyBtn.className = "px-3.5 py-1.5 rounded-lg bg-blue-600 text-white font-extrabold shadow-md transition-all";
-      } else if (period === 'monthly') {
-        monthlyBtn.className = "px-3.5 py-1.5 rounded-lg bg-blue-600 text-white font-extrabold shadow-md transition-all";
-      } else if (period === 'yearly') {
-        yearlyBtn.className = "px-3.5 py-1.5 rounded-lg bg-blue-600 text-white font-extrabold shadow-md transition-all";
-      }
-
-      renderAnalyticsDashboard();
-    }
-
-    function getAnalyticsData(period) {
-      const presentNow = students.filter(s => s.present).length;
-      const totalRoster = students.length || 180;
-      const absentNow = totalRoster - presentNow;
-      const liveRate = totalRoster > 0 ? Math.round((presentNow / totalRoster) * 100) : 0;
-
-      if (period === 'weekly') {
-        return {
-          title: "Attendance Comparison Chart (Daily / Weekly Trend)",
-          labels: ['01 Aug', '02 Aug', '03 Aug', '04 Aug', '07 Aug', '08 Aug', '09 Aug', 'Today (Live)'],
-          gainData: [45, 62, 58, 70, 65, 55, 68, presentNow],
-          lossData: [135, 118, 122, 110, 115, 125, 112, absentNow],
-          avgRate: `${liveRate}%`,
-          periodLabel: "Live Session Tracking",
-          sessionsCount: presentNow > 0 ? "Session Active" : "Starting Session"
-        };
-      } else if (period === 'monthly') {
-        return {
-          title: "Monthly Attendance Comparison Chart (Week 1 - Week 4)",
-          labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4 (Current)'],
-          gainData: [120, 145, 160, presentNow],
-          lossData: [60, 35, 20, absentNow],
-          avgRate: `${liveRate}%`,
-          periodLabel: "Current Month Logging",
-          sessionsCount: presentNow > 0 ? "Session Active" : "Starting Session"
-        };
-      } else {
-        return {
-          title: "Yearly Attendance Comparison Chart (Jan - Dec)",
-          labels: ['Jan-Feb', 'Mar-Apr', 'May-Jun', 'Jul-Aug', 'Sep-Oct', 'Nov-Dec (Live)'],
-          gainData: [110, 130, 150, 160, 170, presentNow],
-          lossData: [70, 50, 30, 20, 10, absentNow],
-          avgRate: `${liveRate}%`,
-          periodLabel: "Current Year Logging",
-          sessionsCount: presentNow > 0 ? "Session Active" : "Starting Session"
-        };
-      }
-    }
-
-    function renderAnalyticsDashboard() {
-      const presentCount = students.filter(s => s.present).length;
-      const totalRoster = students.length || 180;
-      const absentCount = totalRoster - presentCount;
-      const liveRate = totalRoster > 0 ? Math.round((presentCount / totalRoster) * 100) : 0;
-
-      const dataConfig = getAnalyticsData(currentAnalyticsPeriod);
-
-      document.getElementById('graph-title').innerHTML = `<i class="fa-solid fa-chart-line text-blue-400"></i> ${dataConfig.title}`;
-      document.getElementById('kpi-avg-rate').textContent = `${liveRate}%`;
-      document.getElementById('kpi-period-label-1').textContent = dataConfig.periodLabel;
-      document.getElementById('kpi-sessions-count').textContent = dataConfig.sessionsCount;
-
-      const gainStudents = students.filter(s => s.present);
-      const lossStudents = students.filter(s => !s.present);
-
-      document.getElementById('kpi-gain-count').textContent = gainStudents.length;
-      document.getElementById('kpi-loss-count').textContent = lossStudents.length;
-
-      renderAnalyticsGraph(dataConfig);
-      renderGainStudentsList(gainStudents);
-      renderLossStudentsList(lossStudents);
-    }
-
-    function renderAnalyticsGraph(config) {
-      const ctx = document.getElementById('attendanceAnalyticsChart').getContext('2d');
-
-      if (analyticsChartInstance) {
-        analyticsChartInstance.destroy();
-      }
-
-      analyticsChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: config.labels,
-          datasets: [
-            {
-              label: 'Attendance Gain (On Time / Present)',
-              data: config.gainData,
-              borderColor: '#3b82f6',
-              backgroundColor: 'rgba(59, 130, 246, 0.2)',
-              borderWidth: 3,
-              fill: true,
-              tension: 0.4,
-              pointRadius: 6,
-              pointBackgroundColor: '#3b82f6',
-              pointHoverRadius: 8
-            },
-            {
-              label: 'Attendance Loss (Late / Pending)',
-              data: config.lossData,
-              borderColor: '#f43f5e',
-              backgroundColor: 'rgba(244, 63, 94, 0.15)',
-              borderWidth: 2,
-              fill: true,
-              tension: 0.4,
-              pointRadius: 4,
-              pointBackgroundColor: '#f43f5e'
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              labels: {
-                color: '#cbd5e1',
-                font: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' }
-              }
-            },
-            tooltip: {
-              mode: 'index',
-              intersect: false,
-              backgroundColor: '#0f172a',
-              titleColor: '#fff',
-              bodyColor: '#cbd5e1',
-              borderColor: '#374151',
-              borderWidth: 1
-            }
-          },
-          scales: {
-            x: {
-              grid: { color: 'rgba(55, 65, 81, 0.3)' },
-              ticks: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 11 } }
-            },
-            y: {
-              min: 0,
-              max: students.length || 180,
-              grid: { color: 'rgba(55, 65, 81, 0.3)' },
-              ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 11 } }
-            }
-          }
-        }
-      });
-    }
-
-    function renderGainStudentsList(gainList) {
-      const tbody = document.getElementById('gain-students-tbody');
-      tbody.innerHTML = "";
-
-      if (gainList.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-500 font-medium"><i class="fa-solid fa-user-clock text-2xl mb-2 block text-slate-600"></i>No students marked present yet. Starting attendance is 0.</td></tr>`;
-        return;
-      }
-
-      gainList.forEach(s => {
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-emerald-950/30 transition-colors";
-        tr.innerHTML = `
-          <td class="p-2.5 font-mono text-xs font-bold text-blue-400">${s.barcode}</td>
-          <td class="p-2.5 font-bold text-slate-200">${s.name}</td>
-          <td class="p-2.5 font-mono text-xs font-bold text-emerald-400">${s.time}</td>
-          <td class="p-2.5 text-center">
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-              <i class="fa-solid fa-circle-check text-[9px]"></i> Marked Present
-            </span>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function renderLossStudentsList(lossList) {
-      const tbody = document.getElementById('loss-students-tbody');
-      tbody.innerHTML = "";
-
-      if (lossList.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-emerald-400 font-bold"><i class="fa-solid fa-trophy text-2xl mb-2 block"></i>🎉 Perfect Roster! 100% Attendance Gain.</td></tr>`;
-        return;
-      }
-
-      lossList.forEach(s => {
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-rose-950/30 transition-colors";
-        tr.innerHTML = `
-          <td class="p-2.5 font-mono text-xs font-bold text-blue-400">${s.barcode}</td>
-          <td class="p-2.5 font-bold text-slate-200">${s.name}</td>
-          <td class="p-2.5 font-mono text-xs text-slate-400">${s.slNo}</td>
-          <td class="p-2.5 text-center">
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/20 text-rose-300 border border-rose-500/40">
-              <i class="fa-solid fa-clock text-[9px]"></i> Pending Scan
-            </span>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function openEditStudentModal(slNo) {
-      const student = students.find(s => s.slNo === slNo);
-      if (!student) return;
-
-      document.getElementById('edit-student-slno').value = student.slNo;
-      document.getElementById('edit-student-name-input').value = student.name;
-      document.getElementById('edit-student-barcode-input').value = student.barcode;
-
-      const modal = document.getElementById('edit-student-modal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-    }
-
-    document.getElementById('edit-student-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (!isAdminLoggedIn) {
-        showToast("🔒 Admin login required!", "warning");
-        return;
-      }
-
-      const slNo = parseInt(document.getElementById('edit-student-slno').value);
-      const student = students.find(s => s.slNo === slNo);
-      
-      if (student) {
-        student.name = document.getElementById('edit-student-name-input').value.trim();
-        student.barcode = document.getElementById('edit-student-barcode-input').value.trim().toUpperCase();
-        
-        saveToLocalStorage();
-        const activeSearch = document.getElementById('roster-search-input')?.value || "";
-        renderTable(activeSearch);
-        closeModal('edit-student-modal');
-        showToast(`Updated student details for ${student.name}`, 'success');
-      }
-    });
-
-    function openTotalListModal() {
-      const tbody = document.getElementById('total-list-tbody');
-      tbody.innerHTML = "";
-      
-      students.forEach(s => {
-        const tr = document.createElement('tr');
-        tr.className = s.present ? "bg-emerald-950/20" : "hover:bg-slate-900/50";
-        tr.innerHTML = `
-          <td class="p-2.5 font-mono text-xs">${s.slNo}</td>
-          <td class="p-2.5 font-mono text-xs font-bold text-blue-300">${s.barcode}</td>
-          <td class="p-2.5 font-semibold text-slate-200">${s.name}</td>
-          <td class="p-2.5"><span class="text-[11px] px-2 py-0.5 rounded-full ${s.present ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' : 'bg-slate-800 text-slate-400'}">${s.present ? 'Present' : 'Absent'}</span></td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      document.getElementById('total-list-modal').classList.remove('hidden');
-      document.getElementById('total-list-modal').classList.add('flex');
-    }
-
-    function openPresentListModal() {
-      const tbody = document.getElementById('present-list-tbody');
-      tbody.innerHTML = "";
-      
-      const presents = students.filter(s => s.present);
-      if (presents.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-500 font-medium">No students marked present yet.</td></tr>`;
-      } else {
-        presents.forEach(s => {
-          const tr = document.createElement('tr');
-          tr.className = "hover:bg-emerald-950/30 transition-colors";
-          tr.innerHTML = `
-            <td class="p-2.5 font-mono text-xs text-slate-400">${s.slNo}</td>
-            <td class="p-2.5 font-mono text-xs font-bold text-blue-300">${s.barcode}</td>
-            <td class="p-2.5 font-bold text-emerald-300">${s.name}</td>
-            <td class="p-2.5 font-mono text-xs text-slate-400">${s.time}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      }
-
-      document.getElementById('present-list-modal').classList.remove('hidden');
-      document.getElementById('present-list-modal').classList.add('flex');
-    }
-
-    function openAbsentListModal() {
-      const tbody = document.getElementById('absent-list-tbody');
-      tbody.innerHTML = "";
-      
-      const absents = students.filter(s => !s.present);
-      if (absents.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-emerald-400 font-bold">🎉 Perfect Attendance! All students are present.</td></tr>`;
-      } else {
-        absents.forEach(s => {
-          const tr = document.createElement('tr');
-          tr.className = "hover:bg-rose-950/30 transition-colors";
-          tr.innerHTML = `
-            <td class="p-2.5 font-mono text-xs text-slate-400">${s.slNo}</td>
-            <td class="p-2.5 font-mono text-xs font-bold text-blue-300">${s.barcode}</td>
-            <td class="p-2.5 font-semibold text-rose-300">${s.name}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      }
-
-      document.getElementById('absent-list-modal').classList.remove('hidden');
-      document.getElementById('absent-list-modal').classList.add('flex');
-    }
-
-    function openPdfReportsModal() {
-      if (!isAdminLoggedIn) {
-        showToast("🔒 Admin login required to access PDF Reports!", "warning");
-        openLoginModal();
-        return;
-      }
-      const modal = document.getElementById('pdf-reports-modal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-    }
-
-    function triggerPdfPrint(type) {
-      if (!isAdminLoggedIn) {
-        showToast("🔒 Admin login required to print attendance data!", "warning");
-        openLoginModal();
-        return;
-      }
-
-      closeModal('pdf-reports-modal');
-      closeModal('present-list-modal');
-      closeModal('absent-list-modal');
-      closeModal('total-list-modal');
-
-      const titleEl = document.getElementById('pdf-report-title');
-      const subtitleEl = document.getElementById('pdf-report-subtitle');
-      const metaEl = document.getElementById('pdf-report-meta');
-      const tbody = document.getElementById('pdf-table-tbody');
-
-      titleEl.textContent = headerSettings.title;
-      metaEl.textContent = `Date: ${headerSettings.date} | Generated: ${new Date().toLocaleString()}`;
-
-      let reportData = [];
-
-      if (type === 'present') {
-        subtitleEl.textContent = `${headerSettings.session} • Present Students Attendance Report`;
-        reportData = students.filter(s => s.present);
-      } else if (type === 'absent') {
-        subtitleEl.textContent = `${headerSettings.session} • Absent Students Attendance Report`;
-        reportData = students.filter(s => !s.present);
-      } else {
-        subtitleEl.textContent = `${headerSettings.session} • Complete Roster Attendance Report`;
-        reportData = students;
-      }
-
-      const totalCount = students.length;
-      const presentCount = students.filter(s => s.present).length;
-      const absentCount = totalCount - presentCount;
-      const percent = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
-
-      document.getElementById('pdf-total-count').textContent = totalCount;
-      document.getElementById('pdf-present-count').textContent = presentCount;
-      document.getElementById('pdf-absent-count').textContent = absentCount;
-      document.getElementById('pdf-rate').textContent = `${percent}%`;
-
-      tbody.innerHTML = "";
-      if (reportData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="padding: 15px; text-align: center; color: #666;">No student records for this report section.</td></tr>`;
-      } else {
-        reportData.forEach(s => {
-          const tr = document.createElement('tr');
-          tr.style.borderBottom = "1px solid #e2e8f0";
-          tr.innerHTML = `
-            <td style="padding: 6px 8px; border: 1px solid #cbd5e1;">${s.slNo}</td>
-            <td style="padding: 6px 8px; border: 1px solid #cbd5e1; font-family: monospace; font-weight: bold;">${s.barcode}</td>
-            <td style="padding: 6px 8px; border: 1px solid #cbd5e1;">${s.name}</td>
-            <td style="padding: 6px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: ${s.present ? '#15803d' : '#b91c1c'};">${s.present ? 'Present' : 'Absent'}</td>
-            <td style="padding: 6px 8px; border: 1px solid #cbd5e1; font-family: monospace;">${s.time}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      }
-
-      const printArea = document.getElementById('printable-report-area');
-      printArea.classList.remove('hidden');
-      
-      setTimeout(() => {
-        window.print();
-        printArea.classList.add('hidden');
-      }, 300);
-    }
-
-    function closeModal(id) {
-      document.getElementById(id).classList.add('hidden');
-      document.getElementById(id).classList.remove('flex');
-    }
-
-    function openIdCardModal(slNo) {
-      const student = students.find(s => s.slNo === slNo);
-      if (!student) return;
-
-      document.getElementById('card-student-name').textContent = student.name;
-      document.getElementById('card-student-sl').textContent = `SL No: ${student.slNo}`;
-      document.getElementById('card-barcode-text').textContent = student.barcode;
-
-      try {
-        JsBarcode("#card-barcode", student.barcode, {
-          format: "CODE128",
-          width: 2,
-          height: 50,
-          displayValue: false,
-          margin: 0,
-          background: "#ffffff",
-          lineColor: "#0f172a"
-        });
-      } catch(e) {}
-
-      const qrContainer = document.getElementById('card-qrcode');
-      qrContainer.innerHTML = "";
-      try {
-        new QRCode(qrContainer, {
-          text: student.barcode,
-          width: 80,
-          height: 80,
-          colorDark : "#0f172a",
-          colorLight : "#ffffff",
-          correctLevel : QRCode.CorrectLevel.H
-        });
-      } catch(e) {}
-
-      const modal = document.getElementById('id-card-modal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-    }
-
     function toggleAttendanceBySlNo(slNo) {
       const student = students.find(s => s.slNo === slNo);
       if (student) {
         student.present = !student.present;
         student.time = student.present ? new Date().toLocaleTimeString() : '-';
-        saveToLocalStorage();
-        const activeSearch = document.getElementById('roster-search-input')?.value || "";
-        renderTable(activeSearch);
+        syncDataToCloud();
+        
         if (student.present) {
-          showToast(`Marked Present: ${student.name}`, 'success');
+          showToast(`Live Updated Present: ${student.name}`, 'success');
         } else {
-          showToast(`Marked Absent: ${student.name}`, 'warning');
+          showToast(`Live Updated Absent: ${student.name}`, 'warning');
         }
       }
-    }
-
-    function markAllPresent() {
-      if (confirm("Mark all students as Present?")) {
-        const time = new Date().toLocaleTimeString();
-        students.forEach(s => {
-          s.present = true;
-          s.time = time;
-        });
-        saveToLocalStorage();
-        const activeSearch = document.getElementById('roster-search-input')?.value || "";
-        renderTable(activeSearch);
-        showToast("All students marked Present!", "success");
-      }
-    }
-
-    function markAllAbsent() {
-      if (confirm("Reset all students to Absent?")) {
-        students.forEach(s => {
-          s.present = false;
-          s.time = '-';
-        });
-        saveToLocalStorage();
-        const activeSearch = document.getElementById('roster-search-input')?.value || "";
-        renderTable(activeSearch);
-        showToast("All students marked Absent.", "warning");
-      }
-    }
-
-    function deleteStudent(slNo) {
-      const student = students.find(s => s.slNo === slNo);
-      if (student && confirm(`Are you sure you want to delete "${student.name}"?`)) {
-        students = students.filter(s => s.slNo !== slNo);
-        saveToLocalStorage();
-        const activeSearch = document.getElementById('roster-search-input')?.value || "";
-        renderTable(activeSearch);
-        showToast(`Deleted ${student.name}`, "error");
-      }
-    }
-
-    document.getElementById('add-student-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (!isAdminLoggedIn) {
-        showToast("🔒 Admin login required to add students!", "warning");
-        openLoginModal();
-        return;
-      }
-
-      const nameInput = document.getElementById('new-student-name');
-      const barcodeInput = document.getElementById('new-student-barcode');
-      
-      const newName = nameInput.value.trim();
-      const newBarcode = barcodeInput.value.trim().toUpperCase();
-
-      if (!newName || !newBarcode) return;
-
-      const nextSlNo = students.length > 0 ? Math.max(...students.map(s => s.slNo)) + 1 : 1;
-
-      students.push({ slNo: nextSlNo, barcode: newBarcode, name: newName, present: false, time: '-' });
-      saveToLocalStorage();
-      const activeSearch = document.getElementById('roster-search-input')?.value || "";
-      renderTable(activeSearch);
-      
-      nameInput.value = "";
-      barcodeInput.value = "";
-      showToast(`Added "${newName}" (${newBarcode})`, 'success');
-    });
-
-    async function openRegisterModal(slNo) {
-      selectedStudentForReg = students.find(s => s.slNo === slNo);
-      if (!selectedStudentForReg) return;
-
-      if (isMainCameraRunning && html5QrCode) {
-        try { await html5QrCode.stop(); } catch(e) {}
-        isMainCameraRunning = false;
-        document.getElementById('start-btn').classList.remove('hidden');
-        document.getElementById('stop-btn').classList.add('hidden');
-        document.getElementById('camera-idle-overlay').classList.remove('hidden');
-        document.getElementById('laser-line').classList.add('hidden');
-      }
-
-      document.getElementById('modal-student-name').innerHTML = `<i class="fa-solid fa-qrcode text-blue-400"></i> Assign Barcode: ${selectedStudentForReg.name}`;
-      const modal = document.getElementById('scan-modal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-
-      if (!modalQrScanner) {
-        modalQrScanner = new Html5Qrcode("modal-reader");
-      }
-
-      try {
-        await modalQrScanner.start(
-          { facingMode: "environment" },
-          { fps: 25, qrbox: { width: 250, height: 100 }, experimentalFeatures: { useBarCodeDetectorIfSupported: true } },
-          (scannedBarcode) => saveRegisteredBarcode(scannedBarcode)
-        );
-        setTimeout(() => applyModalZoom(2), 500);
-      } catch (err) {
-        showToast("Unable to access camera.", "error");
-        closeRegisterModal();
-      }
-    }
-
-    async function applyModalZoom(zoomLevel) {
-      modalCurrentZoom = zoomLevel;
-      document.querySelectorAll('.modal-zoom-btn').forEach((btn) => {
-        if (btn.textContent === `${zoomLevel}x`) {
-          btn.className = "modal-zoom-btn bg-blue-600 text-white border border-blue-500 text-xs font-bold font-mono px-3 py-1 rounded-lg";
-        } else {
-          btn.className = "modal-zoom-btn bg-slate-800 text-slate-300 border border-slate-700 text-xs font-bold font-mono px-3 py-1 rounded-lg";
-        }
-      });
-
-      if (!modalQrScanner) return;
-      try { await modalQrScanner.applyVideoConstraints({ advanced: [{ zoom: zoomLevel }] }); } catch (e) {}
-    }
-
-    function saveRegisteredBarcode(scannedBarcode) {
-      if (!selectedStudentForReg) return;
-      
-      const newBarcode = scannedBarcode.trim().toUpperCase();
-      const existing = students.find(s => s.barcode === newBarcode && s.slNo !== selectedStudentForReg.slNo);
-      if (existing) {
-        existing.barcode = `26JSOFT${String(existing.slNo).padStart(3, '0')}`;
-      }
-
-      selectedStudentForReg.barcode = newBarcode;
-      saveToLocalStorage();
-      
-      showToast(`Updated barcode for "${selectedStudentForReg.name}" to: ${newBarcode}`, 'success');
-      closeRegisterModal();
-      const activeSearch = document.getElementById('roster-search-input')?.value || "";
-      renderTable(activeSearch);
-    }
-
-    async function closeRegisterModal() {
-      if (modalQrScanner) {
-        try { await modalQrScanner.stop(); } catch(e) {}
-      }
-      closeModal('scan-modal');
-      selectedStudentForReg = null;
-    }
-
-    // ── Geolocation Helpers ───────────────────────────────────────────────────
-    function haversineDistance(lat1, lng1, lat2, lng2) {
-      const R = 6371000; // Earth radius in meters
-      const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180;
-      const Δφ = (lat2 - lat1) * Math.PI / 180;
-      const Δλ = (lng2 - lng1) * Math.PI / 180;
-      const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    }
-
-    function updateGeoBadge() {
-      const badge = document.getElementById('geo-status-badge');
-      if (!badge) return;
-
-      if (isAdminLoggedIn) {
-        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-emerald-900/60 border-emerald-700 text-emerald-300';
-        badge.innerHTML = '<i class="fa-solid fa-shield-halved mr-1"></i> Admin Override';
-        return;
-      }
-
-      if (geoState === 'checking') {
-        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-blue-900/60 border-blue-700 text-blue-300';
-        badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Checking...';
-      } else if (geoState === 'allowed') {
-        const d = Math.round(lastGeoResult.distance);
-        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-emerald-900/60 border-emerald-700 text-emerald-300';
-        badge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> On Campus (${d}m)`;
-      } else if (geoState === 'denied') {
-        const d = Math.round(lastGeoResult.distance);
-        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-rose-900/60 border-rose-700 text-rose-300';
-        badge.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1"></i> Off Campus (${d}m away)`;
-      } else if (geoState === 'error') {
-        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-amber-900/60 border-amber-700 text-amber-300';
-        badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Location Error';
-      } else {
-        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-slate-800 border-slate-700 text-slate-400';
-        badge.innerHTML = '<i class="fa-solid fa-location-dot mr-1"></i> Not Checked';
-      }
-    }
-
-    function updateTimeBadge() {
-      const badge = document.getElementById('time-window-badge');
-      if (!badge) return;
-
-      if (isAdminLoggedIn) {
-        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-emerald-900/60 border-emerald-700 text-emerald-300';
-        badge.innerHTML = '<i class="fa-solid fa-shield-halved mr-1"></i> Admin Override';
-        return;
-      }
-
-      if (!attendanceWindow.enabled) {
-        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-slate-800 border-slate-700 text-slate-400';
-        badge.innerHTML = 'No Restriction';
-        return;
-      }
-      const open = isWithinTimeWindow();
-      if (open) {
-        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-emerald-900/60 border-emerald-700 text-emerald-300';
-        badge.innerHTML = `<i class="fa-solid fa-unlock mr-1"></i> Open ${attendanceWindow.startTime}–${attendanceWindow.endTime}`;
-      } else {
-        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-rose-900/60 border-rose-700 text-rose-300';
-        badge.innerHTML = `<i class="fa-solid fa-lock mr-1"></i> Closed ${attendanceWindow.startTime}–${attendanceWindow.endTime}`;
-      }
-    }
-
-    function triggerGeoCheck() {
-      if (!navigator.geolocation) {
-        geoState = 'error';
-        updateGeoBadge();
-        showToast('Geolocation not supported by this browser.', 'error');
-        return;
-      }
-      geoState = 'checking';
-      updateGeoBadge();
-      document.getElementById('geo-check-btn').disabled = true;
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const dist = haversineDistance(pos.coords.latitude, pos.coords.longitude, CAMPUS_LAT, CAMPUS_LNG);
-          lastGeoResult = { allowed: dist <= GEO_RADIUS_M, distance: dist };
-          geoState = lastGeoResult.allowed ? 'allowed' : 'denied';
-          updateGeoBadge();
-          document.getElementById('geo-check-btn').disabled = false;
-          if (geoState === 'denied') {
-            showToast(`📍 Off campus by ${Math.round(dist)}m — attendance blocked for standard users.`, 'error');
-          } else {
-            showToast(`✅ On campus (${Math.round(dist)}m from ${CAMPUS_NAME}).`, 'success');
-          }
-        },
-        (err) => {
-          geoState = 'error';
-          lastGeoResult = null;
-          updateGeoBadge();
-          document.getElementById('geo-check-btn').disabled = false;
-          let msg = 'Location access denied. Please allow GPS.'; 
-          if (err.code === 2) msg = 'GPS position unavailable. Try outdoors.';
-          if (err.code === 3) msg = 'Location check timed out.';
-          showToast('📍 ' + msg, 'error');
-        },
-        { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
-      );
-    }
-
-    function isWithinTimeWindow() {
-      if (!attendanceWindow.enabled) return true;
-      const now = new Date();
-      const [sh, sm] = attendanceWindow.startTime.split(':').map(Number);
-      const [eh, em] = attendanceWindow.endTime.split(':').map(Number);
-      const nowMin = now.getHours() * 60 + now.getMinutes();
-      const startMin = sh * 60 + sm;
-      const endMin   = eh * 60 + em;
-      return nowMin >= startMin && nowMin < endMin;
-    }
-
-    function openTimeWindowModal() {
-      if (!isAdminLoggedIn) {
-        showToast('⚠️ Admin login required to set time window.', 'warning');
-        openLoginModal();
-        return;
-      }
-      document.getElementById('tw-enabled').checked = attendanceWindow.enabled;
-      document.getElementById('tw-start').value = attendanceWindow.startTime;
-      document.getElementById('tw-end').value   = attendanceWindow.endTime;
-      toggleTWFields();
-      const m = document.getElementById('time-window-modal');
-      m.classList.remove('hidden'); m.classList.add('flex');
-    }
-
-    function toggleTWFields() {
-      const enabled = document.getElementById('tw-enabled').checked;
-      document.getElementById('tw-fields').style.opacity = enabled ? '1' : '0.4';
-      document.getElementById('tw-fields').style.pointerEvents = enabled ? 'auto' : 'none';
-    }
-
-    function saveTimeWindow() {
-      attendanceWindow.enabled   = document.getElementById('tw-enabled').checked;
-      attendanceWindow.startTime = document.getElementById('tw-start').value;
-      attendanceWindow.endTime   = document.getElementById('tw-end').value;
-      saveWindow();
-      updateTimeBadge();
-      closeModal('time-window-modal');
-      showToast(attendanceWindow.enabled
-        ? `⏰ Window set: ${attendanceWindow.startTime} – ${attendanceWindow.endTime}`
-        : '⏰ Time window restriction disabled.', 'success');
-    }
-
-    // ── Attendance Gate (Bypassed for Admin) ─────────────────────────────────
-    function attendanceGate() {
-      // ADMIN OVERRIDE: Logged in admins do not need geo-location or time window checks
-      if (isAdminLoggedIn) {
-        return true;
-      }
-
-      // Standard user check 1: Time-window check
-      if (!isWithinTimeWindow()) {
-        const msg = attendanceWindow.enabled
-          ? `🕐 Attendance window is closed. Allowed: ${attendanceWindow.startTime}–${attendanceWindow.endTime}`
-          : '🕐 Attendance submission is not permitted right now.';
-        showToast(msg, 'error');
-        const s = document.getElementById('scan-status');
-        s.className = 'mt-3 p-3 rounded-xl text-xs text-center font-medium bg-rose-950/80 border border-rose-800/80 text-rose-300 flex items-center justify-center gap-2 animate-slide-in';
-        s.innerHTML = `<i class="fa-solid fa-lock text-rose-400"></i> ${msg}`;
-        return false;
-      }
-
-      // Standard user check 2: Geo check
-      if (geoState === 'denied') {
-        const d = lastGeoResult ? Math.round(lastGeoResult.distance) : '?';
-        const msg = `📍 You are ${d}m from ${CAMPUS_NAME}. Must be within ${GEO_RADIUS_M}m to submit attendance.`;
-        showToast(msg, 'error');
-        const s = document.getElementById('scan-status');
-        s.className = 'mt-3 p-3 rounded-xl text-xs text-center font-medium bg-rose-950/80 border border-rose-800/80 text-rose-300 flex items-center justify-center gap-2 animate-slide-in';
-        s.innerHTML = `<i class="fa-solid fa-location-dot text-rose-400"></i> Off Campus — attendance blocked.`;
-        return false;
-      }
-      if (geoState === 'idle') {
-        showToast('📍 Please verify your campus location first.', 'warning');
-        const s = document.getElementById('scan-status');
-        s.className = 'mt-3 p-3 rounded-xl text-xs text-center font-medium bg-amber-950/80 border border-amber-800/80 text-amber-300 flex items-center justify-center gap-2';
-        s.innerHTML = '<i class="fa-solid fa-location-dot text-amber-400"></i> Click "Verify Campus Location" before scanning.';
-        return false;
-      }
-      return true;
     }
 
     function markAttendance(scannedCode) {
@@ -2312,13 +1425,11 @@
         } else {
           student.present = true;
           student.time = new Date().toLocaleTimeString();
-          saveToLocalStorage();
+          syncDataToCloud();
           
           statusEl.className = "mt-3 p-3 rounded-xl text-xs text-center font-medium bg-emerald-950/80 border border-emerald-800/80 text-emerald-300 flex items-center justify-center gap-2 animate-slide-in";
-          statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> Marked Present: <b>${student.name}</b> (${student.barcode}) ${isAdminLoggedIn ? '<span class="text-amber-400 font-bold ml-1">(Admin Direct)</span>' : ''}`;
-          showToast(`✅ Marked Present: ${student.name}`, 'success');
-          const activeSearch = document.getElementById('roster-search-input')?.value || "";
-          renderTable(activeSearch);
+          statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> Marked Present: <b>${student.name}</b> (${student.barcode})`;
+          showToast(`✅ Live Sync Marked Present: ${student.name}`, 'success');
         }
       } else {
         statusEl.className = "mt-3 p-3 rounded-xl text-xs text-center font-medium bg-rose-950/80 border border-rose-800/80 text-rose-300 flex items-center justify-center gap-2 animate-slide-in";
@@ -2327,80 +1438,235 @@
       }
     }
 
+    // ── Geolocation & Time Gate (Admin Bypass Enabled) ──────────────────────
+    function attendanceGate() {
+      if (isAdminLoggedIn) return true; // Direct override for Logged-In Admin
+
+      if (!isWithinTimeWindow()) {
+        const msg = attendanceWindow.enabled
+          ? `🕐 Attendance window is closed. Allowed: ${attendanceWindow.startTime}–${attendanceWindow.endTime}`
+          : '🕐 Attendance submission is not permitted right now.';
+        showToast(msg, 'error');
+        return false;
+      }
+
+      if (geoState === 'denied') {
+        const d = lastGeoResult ? Math.round(lastGeoResult.distance) : '?';
+        showToast(`📍 You are ${d}m from campus. Must be within ${GEO_RADIUS_M}m to submit.`, 'error');
+        return false;
+      }
+      if (geoState === 'idle') {
+        showToast('📍 Please verify your campus location first.', 'warning');
+        return false;
+      }
+      return true;
+    }
+
+    function isWithinTimeWindow() {
+      if (!attendanceWindow.enabled) return true;
+      const now = new Date();
+      const [sh, sm] = attendanceWindow.startTime.split(':').map(Number);
+      const [eh, em] = attendanceWindow.endTime.split(':').map(Number);
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+      return nowMin >= (sh * 60 + sm) && nowMin < (eh * 60 + em);
+    }
+
+    function openTimeWindowModal() {
+      if (!isAdminLoggedIn) {
+        showToast('⚠️ Admin login required to set time window.', 'warning');
+        openLoginModal();
+        return;
+      }
+      document.getElementById('tw-enabled').checked = attendanceWindow.enabled;
+      document.getElementById('tw-start').value = attendanceWindow.startTime;
+      document.getElementById('tw-end').value   = attendanceWindow.endTime;
+      toggleTWFields();
+      document.getElementById('time-window-modal').classList.remove('hidden'); 
+      document.getElementById('time-window-modal').classList.add('flex');
+    }
+
+    function toggleTWFields() {
+      const enabled = document.getElementById('tw-enabled').checked;
+      document.getElementById('tw-fields').style.opacity = enabled ? '1' : '0.4';
+      document.getElementById('tw-fields').style.pointerEvents = enabled ? 'auto' : 'none';
+    }
+
+    function saveTimeWindow() {
+      attendanceWindow.enabled   = document.getElementById('tw-enabled').checked;
+      attendanceWindow.startTime = document.getElementById('tw-start').value;
+      attendanceWindow.endTime   = document.getElementById('tw-end').value;
+      localStorage.setItem('design_lab_time_window', JSON.stringify(attendanceWindow));
+      updateTimeBadge();
+      closeModal('time-window-modal');
+      showToast(attendanceWindow.enabled
+        ? `⏰ Window set: ${attendanceWindow.startTime} – ${attendanceWindow.endTime}`
+        : '⏰ Time window restriction disabled.', 'success');
+    }
+
+    function haversineDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371000;
+      const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180;
+      const Δφ = (lat2 - lat1) * Math.PI / 180;
+      const Δλ = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function triggerGeoCheck() {
+      if (!navigator.geolocation) {
+        geoState = 'error';
+        showToast('Geolocation not supported.', 'error');
+        return;
+      }
+      geoState = 'checking';
+      updateGeoBadge();
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const dist = haversineDistance(pos.coords.latitude, pos.coords.longitude, CAMPUS_LAT, CAMPUS_LNG);
+          lastGeoResult = { allowed: dist <= GEO_RADIUS_M, distance: dist };
+          geoState = lastGeoResult.allowed ? 'allowed' : 'denied';
+          updateGeoBadge();
+          if (geoState === 'denied') {
+            showToast(`📍 Off campus by ${Math.round(dist)}m — attendance blocked.`, 'error');
+          } else {
+            showToast(`✅ On campus (${Math.round(dist)}m from ${CAMPUS_NAME}).`, 'success');
+          }
+        },
+        () => {
+          geoState = 'error';
+          updateGeoBadge();
+          showToast('📍 Location access denied.', 'error');
+        },
+        { enableHighAccuracy: true, timeout: 12000 }
+      );
+    }
+
+    function updateGeoBadge() {
+      const badge = document.getElementById('geo-status-badge');
+      if (!badge) return;
+      if (isAdminLoggedIn) {
+        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-emerald-950/80 border-emerald-700 text-emerald-300';
+        badge.innerHTML = '<i class="fa-solid fa-shield-halved mr-1"></i> Admin Direct Override';
+        return;
+      }
+      if (geoState === 'allowed') {
+        const d = Math.round(lastGeoResult.distance);
+        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-emerald-900/60 border-emerald-700 text-emerald-300';
+        badge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> On Campus (${d}m)`;
+      } else if (geoState === 'denied') {
+        const d = Math.round(lastGeoResult.distance);
+        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-rose-900/60 border-rose-700 text-rose-300';
+        badge.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1"></i> Off Campus (${d}m away)`;
+      } else {
+        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-slate-800 border-slate-700 text-slate-400';
+        badge.innerHTML = '<i class="fa-solid fa-location-dot mr-1"></i> Not Checked';
+      }
+    }
+
+    function updateTimeBadge() {
+      const badge = document.getElementById('time-window-badge');
+      if (!badge) return;
+      if (isAdminLoggedIn) {
+        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-emerald-950/80 border-emerald-700 text-emerald-300';
+        badge.innerHTML = '<i class="fa-solid fa-shield-halved mr-1"></i> Admin Direct Override';
+        return;
+      }
+      if (!attendanceWindow.enabled) {
+        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-slate-800 border-slate-700 text-slate-400';
+        badge.innerHTML = 'No Restriction';
+        return;
+      }
+      const open = isWithinTimeWindow();
+      if (open) {
+        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-emerald-900/60 border-emerald-700 text-emerald-300';
+        badge.innerHTML = `<i class="fa-solid fa-unlock mr-1"></i> Open ${attendanceWindow.startTime}–${attendanceWindow.endTime}`;
+      } else {
+        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-rose-900/60 border-rose-700 text-rose-300';
+        badge.innerHTML = `<i class="fa-solid fa-lock mr-1"></i> Closed ${attendanceWindow.startTime}–${attendanceWindow.endTime}`;
+      }
+    }
+
+    // Camera Controls
     async function startCamera() {
       const statusEl = document.getElementById('scan-status');
-      statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-400"></i> Initializing camera scanner...`;
+      statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-400"></i> Initializing scanner...`;
 
       if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
 
-      const config = { 
-        fps: 25, 
-        qrbox: { width: 280, height: 110 },
-        experimentalFeatures: { useBarCodeDetectorIfSupported: true }
-      };
-
       try {
-        await html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => markAttendance(decodedText));
+        await html5QrCode.start({ facingMode: "environment" }, { fps: 25, qrbox: { width: 280, height: 110 } }, (text) => markAttendance(text));
         isMainCameraRunning = true;
-        
-        statusEl.className = "mt-3 p-3 rounded-xl text-xs text-center font-medium bg-blue-950/80 border border-blue-800/80 text-blue-300 flex items-center justify-center gap-2";
-        statusEl.innerHTML = `<i class="fa-solid fa-camera text-blue-400"></i> Camera active (2x Zoom). Hold barcode ~25-30cm away.`;
-        
         document.getElementById('camera-idle-overlay').classList.add('hidden');
         document.getElementById('laser-line').classList.remove('hidden');
         document.getElementById('start-btn').classList.add('hidden');
         document.getElementById('stop-btn').classList.remove('hidden');
         document.getElementById('torch-btn').disabled = false;
-        
-        setTimeout(() => applyZoom(2), 500);
       } catch (err) {
-        statusEl.className = "mt-3 p-3 rounded-xl text-xs text-center font-medium bg-rose-950/80 border border-rose-800/80 text-rose-300 flex items-center justify-center gap-2";
-        statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400"></i> Camera Access Error: Check permissions or HTTPS context.`;
-        showToast("Camera access failed.", "error");
+        statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400"></i> Camera Access Error. Ensure HTTPS.`;
       }
     }
 
     async function stopCamera() {
       if (html5QrCode && isMainCameraRunning) {
-        try {
-          await html5QrCode.stop();
-        } catch(e) {}
+        try { await html5QrCode.stop(); } catch(e) {}
         isMainCameraRunning = false;
         document.getElementById('camera-idle-overlay').classList.remove('hidden');
         document.getElementById('laser-line').classList.add('hidden');
         document.getElementById('start-btn').classList.remove('hidden');
         document.getElementById('stop-btn').classList.add('hidden');
         document.getElementById('torch-btn').disabled = true;
-        
-        const statusEl = document.getElementById('scan-status');
-        statusEl.className = "mt-3 p-3 rounded-xl text-xs text-center font-medium bg-slate-900/80 border border-slate-800 text-slate-400 flex items-center justify-center gap-2";
-        statusEl.innerHTML = `<i class="fa-solid fa-circle-info text-blue-400"></i> Camera stopped. Click "Start Camera" to scan.`;
       }
     }
 
-    async function applyZoom(zoomLevel) {
-      currentZoom = zoomLevel;
-      document.getElementById('zoom-indicator').textContent = `Zoom: ${zoomLevel}x`;
-
-      document.querySelectorAll('.zoom-btn').forEach((btn) => {
-        if (btn.textContent === `${zoomLevel}x`) {
-          btn.className = "zoom-btn bg-blue-600 text-white border border-blue-500 text-xs font-bold font-mono px-2.5 py-1 rounded-lg shadow-md shadow-blue-600/40";
-        } else {
-          btn.className = "zoom-btn bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold font-mono px-2.5 py-1 rounded-lg transition-all";
-        }
-      });
-
-      if (!html5QrCode || !isMainCameraRunning) return;
-      try { await html5QrCode.applyVideoConstraints({ advanced: [{ zoom: zoomLevel }] }); } catch (e) {}
+    // Analytics Charting
+    function switchAnalyticsPeriod(period) {
+      currentAnalyticsPeriod = period;
+      renderAnalyticsDashboard();
     }
 
-    async function toggleTorch() {
-      if (!html5QrCode || !isMainCameraRunning) return;
-      isTorchOn = !isTorchOn;
-      try { 
-        await html5QrCode.applyVideoConstraints({ advanced: [{ torch: isTorchOn }] });
-        showToast(isTorchOn ? "Flashlight turned ON" : "Flashlight turned OFF", "info");
-      } catch (e) {}
+    function renderAnalyticsDashboard() {
+      const presentCount = students.filter(s => s.present).length;
+      const totalRoster = students.length || 180;
+      const absentCount = totalRoster - presentCount;
+      const liveRate = totalRoster > 0 ? Math.round((presentCount / totalRoster) * 100) : 0;
+
+      document.getElementById('kpi-avg-rate').textContent = `${liveRate}%`;
+      document.getElementById('kpi-gain-count').textContent = presentCount;
+      document.getElementById('kpi-loss-count').textContent = absentCount;
+
+      renderGainStudentsList(students.filter(s => s.present));
+      renderLossStudentsList(students.filter(s => !s.present));
+    }
+
+    function renderGainStudentsList(gainList) {
+      const tbody = document.getElementById('gain-students-tbody');
+      tbody.innerHTML = gainList.length === 0 
+        ? `<tr><td colspan="4" class="p-8 text-center text-slate-500 font-medium">No students marked present yet.</td></tr>`
+        : gainList.map(s => `
+            <tr class="hover:bg-emerald-950/30 transition-colors">
+              <td class="p-2.5 font-mono text-xs font-bold text-blue-400">${s.barcode}</td>
+              <td class="p-2.5 font-bold text-slate-200">${s.name}</td>
+              <td class="p-2.5 font-mono text-xs font-bold text-emerald-400">${s.time}</td>
+              <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300">Present</span></td>
+            </tr>`).join('');
+    }
+
+    function renderLossStudentsList(lossList) {
+      const tbody = document.getElementById('loss-students-tbody');
+      tbody.innerHTML = lossList.length === 0 
+        ? `<tr><td colspan="4" class="p-8 text-center text-emerald-400 font-bold">🎉 Perfect Roster! 100% Attendance.</td></tr>`
+        : lossList.map(s => `
+            <tr class="hover:bg-rose-950/30 transition-colors">
+              <td class="p-2.5 font-mono text-xs font-bold text-blue-400">${s.barcode}</td>
+              <td class="p-2.5 font-bold text-slate-200">${s.name}</td>
+              <td class="p-2.5 font-mono text-xs text-slate-400">${s.slNo}</td>
+              <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/20 text-rose-300">Pending</span></td>
+            </tr>`).join('');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+      document.getElementById(id).classList.remove('flex');
     }
 
     document.getElementById('manual-form').addEventListener('submit', (e) => {
@@ -2412,51 +1678,11 @@
       }
     });
 
+    // Boot system
     initDatabase();
-    renderTable();
     updateGeoBadge();
     updateTimeBadge();
-    setInterval(updateTimeBadge, 30000); 
+    setInterval(updateTimeBadge, 30000);
   </script>
-
-  <div id="time-window-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 items-center justify-center p-4">
-    <div class="bg-[#0d1322] border border-slate-700 rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-5 animate-slide-in">
-      <div class="flex justify-between items-center">
-        <h3 class="text-base font-black font-display text-white flex items-center gap-2">
-          <i class="fa-solid fa-clock text-amber-400"></i> Attendance Time Window
-        </h3>
-        <button onclick="closeModal('time-window-modal')" class="text-slate-400 hover:text-white text-lg">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <p class="text-xs text-slate-400">When enabled, students can only submit attendance during the specified time range. Outside this window, all barcode scans and manual entries are blocked.</p>
-
-      <label class="flex items-center gap-3 cursor-pointer bg-slate-900/60 border border-slate-700 rounded-xl p-3">
-        <input type="checkbox" id="tw-enabled" onchange="toggleTWFields()" class="w-4 h-4 accent-amber-500">
-        <span class="text-sm font-bold text-white">Enable Time Window Restriction</span>
-      </label>
-
-      <div id="tw-fields" class="space-y-3 transition-all">
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-400 mb-1"><i class="fa-solid fa-play text-emerald-400 mr-1"></i>Start Time</label>
-            <input type="time" id="tw-start" class="w-full bg-slate-900 text-white border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono outline-none focus:ring-2 focus:ring-amber-500">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-400 mb-1"><i class="fa-solid fa-stop text-rose-400 mr-1"></i>End Time</label>
-            <input type="time" id="tw-end" class="w-full bg-slate-900 text-white border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono outline-none focus:ring-2 focus:ring-amber-500">
-          </div>
-        </div>
-        <p class="text-[11px] text-slate-500">Example: Start 08:30, End 09:30 allows attendance for 1 hour only.</p>
-      </div>
-
-      <div class="flex gap-3 pt-1">
-        <button onclick="closeModal('time-window-modal')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-bold py-2.5 rounded-xl border border-slate-700 transition-all">Cancel</button>
-        <button onclick="saveTimeWindow()" class="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-sm font-bold py-2.5 rounded-xl shadow-lg shadow-amber-600/30 transition-all">Save Window</button>
-      </div>
-    </div>
-  </div>
-
 </body>
 </html>
