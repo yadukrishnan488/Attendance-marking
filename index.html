@@ -94,8 +94,8 @@
   <!-- Toast Notifications -->
   <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4"></div>
 
-  <!-- Live Sync Status Banner -->
-  <div id="sync-indicator" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 px-3.5 py-1 rounded-full text-[11px] font-bold bg-slate-900/90 border border-slate-700 text-slate-400 shadow-2xl flex items-center gap-2 backdrop-blur-md">
+  <!-- Live Sync Status Banner (Auto-Hiding Pill) -->
+  <div id="sync-indicator" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 px-3.5 py-1 rounded-full text-[11px] font-bold bg-slate-900/90 border border-slate-700 text-slate-400 shadow-2xl flex items-center gap-2 backdrop-blur-md transition-all duration-500 ease-in-out">
     <span id="sync-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
     <span id="sync-text">Connecting Real-Time Sync...</span>
   </div>
@@ -924,7 +924,7 @@
     </table>
   </div>
 
-  <!-- Application Logic with FIREBASE INTEGRATION -->
+  <!-- Application Logic with FIREBASE & AUTO-HIDING POPUP -->
   <script>
     // =========================================================================
     // FIREBASE REAL-TIME DATABASE CONFIGURATION
@@ -1139,8 +1139,27 @@
     }
 
     // =========================================================================
-    // REAL-TIME CLOUD SYNCHRONIZATION ENGINE
+    // REAL-TIME CLOUD SYNCHRONIZATION ENGINE & AUTO-HIDE BANNER LOGIC
     // =========================================================================
+    let hasShownSyncPopup = false;
+
+    function hideSyncIndicator() {
+      const el = document.getElementById('sync-indicator');
+      if (el) {
+        el.style.transform = 'translate(-50%, -60px)'; // Slide up off screen
+        el.style.opacity = '0';
+        el.style.pointerEvents = 'none';
+      }
+    }
+
+    function showSyncIndicator() {
+      const el = document.getElementById('sync-indicator');
+      if (el) {
+        el.style.transform = 'translate(-50%, 0)'; // Slide down into view
+        el.style.opacity = '1';
+      }
+    }
+
     function initDatabase() {
       initAdminAuth();
 
@@ -1155,6 +1174,15 @@
             
             document.getElementById('sync-dot').className = "w-2 h-2 rounded-full bg-emerald-400";
             document.getElementById('sync-text').textContent = "Live Cloud Sync Active: attendance-marker-d8174";
+
+            // Popup once on load, then auto-hide after 3.5 seconds
+            if (!hasShownSyncPopup) {
+              hasShownSyncPopup = true;
+              showSyncIndicator();
+              setTimeout(() => {
+                hideSyncIndicator();
+              }, 3500);
+            }
           } else {
             loadDefaultStudents();
             syncDataToCloud();
@@ -1162,10 +1190,13 @@
         }, (error) => {
           document.getElementById('sync-dot').className = "w-2 h-2 rounded-full bg-rose-400";
           document.getElementById('sync-text').textContent = "Sync Warning: Check Rules in Firebase Console";
+          showSyncIndicator();
         });
       } else {
         document.getElementById('sync-dot').className = "w-2 h-2 rounded-full bg-amber-400";
         document.getElementById('sync-text').textContent = "Local Storage Mode";
+        showSyncIndicator();
+        setTimeout(() => { hideSyncIndicator(); }, 3500);
 
         const savedHeader = localStorage.getItem('design_lab_header_settings');
         if (savedHeader) {
@@ -1659,7 +1690,7 @@
             <tr class="hover:bg-rose-950/30 transition-colors">
               <td class="p-2.5 font-mono text-xs font-bold text-blue-400">${s.barcode}</td>
               <td class="p-2.5 font-bold text-slate-200">${s.name}</td>
-              <td class="p-2.5 font-mono text-xs text-slate-400">${s.slNo}</td>
+              <td class="p-2.5 font-mono text-xs font-slate-400">${s.slNo}</td>
               <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/20 text-rose-300">Pending</span></td>
             </tr>`).join('');
     }
