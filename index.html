@@ -1076,7 +1076,7 @@
         widget.innerHTML = `
           <div class="flex items-center gap-2 bg-emerald-950/80 border border-emerald-500/70 text-emerald-300 px-3.5 py-2 rounded-xl text-xs font-extrabold shadow-md">
             <i class="fa-solid fa-user-shield text-emerald-400 text-sm"></i>
-            <span>Admin Active</span>
+            <span>Admin Active (Override ON)</span>
             <button onclick="logoutAdmin()" title="Logout Admin" class="ml-1.5 bg-rose-950 hover:bg-rose-900 text-rose-300 px-2 py-0.5 rounded-md text-[10px] font-bold border border-rose-800">
               Logout
             </button>
@@ -1128,7 +1128,7 @@
         sessionStorage.setItem('design_lab_admin_session', 'true');
         updateAdminAuthUI();
         closeModal('login-modal');
-        showToast("🔓 Welcome, Admin! Edit & PDF printing features unlocked.", "success");
+        showToast("🔓 Welcome Admin! Location and time window checks bypassed.", "success");
       } else {
         errorMsg.textContent = "Invalid username or password!";
         errorMsg.classList.remove('hidden');
@@ -1350,10 +1350,10 @@
     let isMainCameraRunning = false;
 
     // ── Geolocation & Time-Window State ──────────────────────────────────────
-    const CAMPUS_LAT  = 10.007491;   // Updated Latitude
-    const CAMPUS_LNG  = 76.365410;   // Updated Longitude
+    const CAMPUS_LAT  = 10.007491;   // Latitude
+    const CAMPUS_LNG  = 76.365410;   // Longitude
     const CAMPUS_NAME = 'Campus (10.007491, 76.365410)';
-    const GEO_RADIUS_M = 300;      // 300-metre campus radius
+    const GEO_RADIUS_M = 300;        // 300-metre campus radius
 
     let geoState = 'idle';         
     let geoWatchId = null;
@@ -1431,7 +1431,7 @@
             <td class="p-3 font-mono text-xs text-slate-400">${student.time}</td>
             <td class="p-3 text-center flex justify-center gap-1.5 flex-wrap">
               <button 
-                onclick="adminActionGuard(toggleAttendanceBySlNo, ${student.slNo})" 
+                onclick="toggleAttendanceBySlNo(${student.slNo})" 
                 class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all duration-200 ${
                   student.present 
                     ? 'bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800' 
@@ -2115,6 +2115,13 @@
     function updateGeoBadge() {
       const badge = document.getElementById('geo-status-badge');
       if (!badge) return;
+
+      if (isAdminLoggedIn) {
+        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-emerald-900/60 border-emerald-700 text-emerald-300';
+        badge.innerHTML = '<i class="fa-solid fa-shield-halved mr-1"></i> Admin Override';
+        return;
+      }
+
       if (geoState === 'checking') {
         badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-blue-900/60 border-blue-700 text-blue-300';
         badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Checking...';
@@ -2138,6 +2145,13 @@
     function updateTimeBadge() {
       const badge = document.getElementById('time-window-badge');
       if (!badge) return;
+
+      if (isAdminLoggedIn) {
+        badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-emerald-900/60 border-emerald-700 text-emerald-300';
+        badge.innerHTML = '<i class="fa-solid fa-shield-halved mr-1"></i> Admin Override';
+        return;
+      }
+
       if (!attendanceWindow.enabled) {
         badge.className = 'px-2.5 py-0.5 rounded-lg border text-[11px] font-bold bg-slate-800 border-slate-700 text-slate-400';
         badge.innerHTML = 'No Restriction';
@@ -2171,7 +2185,7 @@
           updateGeoBadge();
           document.getElementById('geo-check-btn').disabled = false;
           if (geoState === 'denied') {
-            showToast(`📍 Off campus by ${Math.round(dist)}m — attendance blocked.`, 'error');
+            showToast(`📍 Off campus by ${Math.round(dist)}m — attendance blocked for standard users.`, 'error');
           } else {
             showToast(`✅ On campus (${Math.round(dist)}m from ${CAMPUS_NAME}).`, 'success');
           }
@@ -2233,7 +2247,14 @@
         : '⏰ Time window restriction disabled.', 'success');
     }
 
+    // ── Attendance Gate (Bypassed for Admin) ─────────────────────────────────
     function attendanceGate() {
+      // ADMIN OVERRIDE: Logged in admins do not need geo-location or time window checks
+      if (isAdminLoggedIn) {
+        return true;
+      }
+
+      // Standard user check 1: Time-window check
       if (!isWithinTimeWindow()) {
         const msg = attendanceWindow.enabled
           ? `🕐 Attendance window is closed. Allowed: ${attendanceWindow.startTime}–${attendanceWindow.endTime}`
@@ -2245,6 +2266,7 @@
         return false;
       }
 
+      // Standard user check 2: Geo check
       if (geoState === 'denied') {
         const d = lastGeoResult ? Math.round(lastGeoResult.distance) : '?';
         const msg = `📍 You are ${d}m from ${CAMPUS_NAME}. Must be within ${GEO_RADIUS_M}m to submit attendance.`;
@@ -2293,7 +2315,7 @@
           saveToLocalStorage();
           
           statusEl.className = "mt-3 p-3 rounded-xl text-xs text-center font-medium bg-emerald-950/80 border border-emerald-800/80 text-emerald-300 flex items-center justify-center gap-2 animate-slide-in";
-          statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> Marked Present: <b>${student.name}</b> (${student.barcode})`;
+          statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> Marked Present: <b>${student.name}</b> (${student.barcode}) ${isAdminLoggedIn ? '<span class="text-amber-400 font-bold ml-1">(Admin Direct)</span>' : ''}`;
           showToast(`✅ Marked Present: ${student.name}`, 'success');
           const activeSearch = document.getElementById('roster-search-input')?.value || "";
           renderTable(activeSearch);
